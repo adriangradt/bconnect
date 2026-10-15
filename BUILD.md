@@ -1,7 +1,7 @@
 # Build, test and publish
 
 Everything runs on the homelab server (`adriansserver`, Ubuntu 26.04, x86_64).
-No GitHub, no hosted CI.
+Source on GitHub (adriangradt/bconnect); Android builds run on the homelab, iOS builds on Codemagic.
 
 ## Toolchain
 
@@ -81,21 +81,15 @@ Apple Developer account is needed. Compiling still needs macOS and Xcode;
 that runs on Codemagic (free plan: 500 macOS M2 minutes per month, one
 build takes roughly 10–15 minutes).
 
-Codemagic clones the code from the homelab, not from GitHub:
-
-- Bare repository `/srv/git/bedrockbridge.git` (remote `homelab` of this checkout)
-- Served read-only over HTTPS: `https://stalincraft.de/git/bedrockbridge.git`
-  (nginx → fcgiwrap → `git-http-backend`, only `git-upload-pack`, push is refused)
-- Basic auth user `codemagic`, password in `~/.bedrockbridge-codemagic/git-credentials`
-  (hash in `/etc/nginx/bedrockbridge-git.htpasswd`)
+Codemagic clones the code from https://github.com/adriangradt/bconnect
+(remote `github` of this checkout). Only source code goes there; the
+signing key, passwords and built files stay on the homelab.
 
 ### One-time setup in Codemagic
 
-1. Sign up at https://codemagic.io (free personal account).
-2. Add application → **Other** (Git repository URL) →
-   URL `https://stalincraft.de/git/bedrockbridge.git`, private repository,
-   username and password from `~/.bedrockbridge-codemagic/git-credentials`.
-   Project type: Flutter App. Codemagic reads `codemagic.yaml`.
+1. Sign up at https://codemagic.io with GitHub (free personal account).
+2. Add application → GitHub → `adriangradt/bconnect`, project type Flutter App.
+   Codemagic reads `codemagic.yaml`.
 3. Team settings (Personal account) → Integrations → **Codemagic API** → Show,
    then on the server: `nano ~/.bedrockbridge-codemagic/api-token`
    (paste the token, save; `chmod 600` the file).
@@ -103,7 +97,7 @@ Codemagic clones the code from the homelab, not from GitHub:
 ### Each iOS release
 
     git commit -am "…"            # the build uses the pushed commit
-    deploy/codemagic-ios.py       # push, build on Codemagic, download, check, publish
+    deploy/codemagic-ios.py       # push to GitHub, build on Codemagic, download, check, publish
 
 The workflow `ios-altstore` in `codemagic.yaml` runs the tests, then
 `deploy/build-ios-altstore.sh` (`flutter build ios --release --no-codesign`,

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Build the iOS IPA on Codemagic and publish it for AltStore Classic.
 
-Runs on the homelab. Codemagic clones the self-hosted repository
-https://stalincraft.de/git/bedrockbridge.git, runs the `ios-altstore`
+Runs on the homelab. Codemagic clones https://github.com/adriangradt/bconnect,
+runs the `ios-altstore`
 workflow from codemagic.yaml, and this script downloads the IPA, checks it
 with deploy/publish.py and puts it online together with altstore.json.
 
 One-time setup (see BUILD.md): Codemagic API token in
-~/.bedrockbridge-codemagic/api-token, app added in Codemagic with the
-HTTPS URL and the credentials from ~/.bedrockbridge-codemagic/git-credentials.
+~/.bedrockbridge-codemagic/api-token, GitHub repository added as app in Codemagic.
 
   deploy/codemagic-ios.py               # push, build, download, publish
   deploy/codemagic-ios.py --no-publish  # stop after download and checks
@@ -27,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CONF = Path.home() / ".bedrockbridge-codemagic"
 API = "https://api.codemagic.io"
 WORKFLOW = "ios-altstore"
-REPO_MATCH = "stalincraft.de/git/bedrockbridge"
+REPO_MATCH = "adriangradt/bconnect"
 OUT = ROOT / "build" / "codemagic"
 DONE = {"finished", "failed", "canceled", "timeout", "skipped"}
 
@@ -75,7 +74,7 @@ def push() -> str:
 
     if git("status", "--porcelain").strip():
         fail("working tree has uncommitted changes; commit them first so the build matches a commit")
-    git("push", "-q", "homelab", "main")
+    git("push", "-q", "github", "main")
     return git("rev-parse", "--short", "HEAD").strip()
 
 

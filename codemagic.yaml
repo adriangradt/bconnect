@@ -1,5 +1,5 @@
 # Codemagic: unsigned iOS build for AltStore Classic.
-# Started by deploy/codemagic-ios.sh on the homelab; no GitHub involved.
+# Started by deploy/codemagic-ios.py on the homelab (repo: github.com/adriangradt/bconnect).
 # AltStore re-signs the IPA with the user's Apple ID, so no signing here.
 workflows:
   ios-altstore:

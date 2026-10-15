@@ -84,11 +84,11 @@ void main() {
 
   group('LanScanner', () {
     test('subnet sweep covers the /24 without the own address', () {
-      final hosts = subnetHosts(InternetAddress('192.168.178.42'));
+      final hosts = subnetHosts(InternetAddress('192.168.1.42'));
       expect(hosts, hasLength(253));
-      expect(hosts.first.address, '192.168.178.1');
-      expect(hosts.last.address, '192.168.178.254');
-      expect(hosts.map((h) => h.address), isNot(contains('192.168.178.42')));
+      expect(hosts.first.address, '192.168.1.1');
+      expect(hosts.last.address, '192.168.1.254');
+      expect(hosts.map((h) => h.address), isNot(contains('192.168.1.42')));
       expect(subnetHosts(InternetAddress('::1')), isEmpty);
     });
 

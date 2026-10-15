@@ -40,12 +40,11 @@ still answer.
 
 ## Blockers
 
-1. **iOS IPA: waiting for Codemagic setup.** Everything on the homelab is
-   ready: private Git endpoint `https://stalincraft.de/git/bedrockbridge.git`
-   (clone tested from the internet, push refused), `codemagic.yaml`,
-   `deploy/codemagic-ios.py`. Needed once from you: Codemagic account, app
-   added with the Git URL and credentials, API token on the server
-   (BUILD.md, "One-time setup in Codemagic"). The Swift code and the iOS
+1. **iOS IPA: waiting for Codemagic setup.** Code is on
+   github.com/adriangradt/bconnect; `codemagic.yaml` and
+   `deploy/codemagic-ios.py` are ready. Needed once from you: Codemagic
+   account with GitHub, app `adriangradt/bconnect` added, API token on the
+   server (BUILD.md, "One-time setup in Codemagic"). The Swift code and the iOS
    build itself are unverified until the first Codemagic run.
 2. **iOS LAN limits with AltStore.** Free Apple IDs cannot get the multicast
    entitlement. LAN scan on iOS uses unicast pings across the /24 instead;
