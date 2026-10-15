@@ -8,6 +8,7 @@ whatever artifacts are present there. Needs sudo for /var/www.
   deploy/publish.py                      # page + APK from build/
   deploy/publish.py --ipa path/to.ipa    # also publish an unsigned iOS build for AltStore Classic
   deploy/publish.py --page-only          # only regenerate the page
+  deploy/publish.py --ipa-only --ipa x   # only add or replace the IPA
 """
 
 import argparse
@@ -228,11 +229,17 @@ def main() -> None:
     ap.add_argument("--apk", type=Path, default=DEFAULT_APK)
     ap.add_argument("--ipa", type=Path)
     ap.add_argument("--page-only", action="store_true")
+    ap.add_argument("--ipa-only", action="store_true", help="publish --ipa without touching the APK")
     args = ap.parse_args()
 
     sudo("install", "-d", "-m", "755", str(TARGET), str(DOWNLOADS))
 
-    if not args.page_only:
+    if args.ipa_only:
+        if not args.ipa:
+            fail("--ipa-only needs --ipa")
+        verify_ipa(args.ipa)
+        sudo("install", "-m", "644", str(args.ipa), str(DOWNLOADS / "BedrockBridge.ipa"))
+    elif not args.page_only:
         if not args.apk.exists():
             fail(f"{args.apk} not found, run flutter build apk --release first")
         verify_apk(args.apk)

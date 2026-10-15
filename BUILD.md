@@ -73,36 +73,61 @@ All locations allow only GET/HEAD and use the existing `sc_seiten` rate limit.
 The server-wide security headers (CSP, HSTS, X-Frame-Options) apply.
 The previous config is in `/etc/nginx/backup/`.
 
-## iOS build for AltStore Classic (needs a Mac)
+## iOS build for AltStore Classic (Codemagic, no Mac)
 
 iOS apps are distributed via **AltStore Classic**. AltStore re-signs every
 app with the user's own Apple ID, so the IPA is built **unsigned** and no
-Apple Developer account is needed.
+Apple Developer account is needed. Compiling still needs macOS and Xcode;
+that runs on Codemagic (free plan: 500 macOS M2 minutes per month, one
+build takes roughly 10–15 minutes).
 
-On a Mac with Xcode and Flutter 3.47.7, in a copy of this project:
+Codemagic clones the code from the homelab, not from GitHub:
 
-    deploy/build-ios-altstore.sh adrian@<server>
+- Bare repository `/srv/git/bedrockbridge.git` (remote `homelab` of this checkout)
+- Served read-only over HTTPS: `https://stalincraft.de/git/bedrockbridge.git`
+  (nginx → fcgiwrap → `git-http-backend`, only `git-upload-pack`, push is refused)
+- Basic auth user `codemagic`, password in `~/.bedrockbridge-codemagic/git-credentials`
+  (hash in `/etc/nginx/bedrockbridge-git.htpasswd`)
 
-The script runs the tests, runs `flutter build ios --release --no-codesign`,
-packs `Payload/Runner.app` into `build/BedrockBridge.ipa`, copies it to the
-server and runs `deploy/publish.py --ipa`. Without an argument it only builds.
+### One-time setup in Codemagic
 
-`publish.py` checks the IPA: bundle ID, arm64 Mach-O executable,
-`Flutter.framework` and `App.framework`, and that it is **not** signed.
-It then publishes:
+1. Sign up at https://codemagic.io (free personal account).
+2. Add application → **Other** (Git repository URL) →
+   URL `https://stalincraft.de/git/bedrockbridge.git`, private repository,
+   username and password from `~/.bedrockbridge-codemagic/git-credentials`.
+   Project type: Flutter App. Codemagic reads `codemagic.yaml`.
+3. Team settings (Personal account) → Integrations → **Codemagic API** → Show,
+   then on the server: `nano ~/.bedrockbridge-codemagic/api-token`
+   (paste the token, save; `chmod 600` the file).
+
+### Each iOS release
+
+    git commit -am "…"            # the build uses the pushed commit
+    deploy/codemagic-ios.py       # push, build on Codemagic, download, check, publish
+
+The workflow `ios-altstore` in `codemagic.yaml` runs the tests, then
+`deploy/build-ios-altstore.sh` (`flutter build ios --release --no-codesign`,
+then packs `Payload/Runner.app` into `build/BedrockBridge.ipa`).
+`deploy/publish.py --ipa-only` checks the IPA: bundle ID, arm64 Mach-O
+executable, `Flutter.framework` and `App.framework`, and that it is **not**
+signed. It then publishes, without touching the APK:
 
 - `https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa`
 - `https://stalincraft.de/bedrockbridge/altstore.json`, the AltStore source
-  (users add it once and get updates in AltStore)
 - the iOS card on the page with an `altstore-classic://source?url=…` button
+
+`deploy/build-ios-altstore.sh` also works on any Mac, if one is available.
 
 Limits on iOS with AltStore (free Apple ID):
 
 1. No multicast entitlement. Free Apple IDs cannot get
    `com.apple.developer.networking.multicast`, and iOS blocks UDP broadcast
    without it. So **LAN scan and the bridge's LAN discovery do not work on
-   iOS**; server status (unicast ping) does. Consoles still see the server if
-   an Android phone runs the bridge in the same Wi-Fi.
+   iOS**. The app replaces the LAN scan on iOS with unicast pings to every
+   host of the own /24 network; that only needs the local network permission
+   (`NSLocalNetworkUsageDescription`, asked on first use). Server status
+   works. Consoles only find a bridge via broadcast, so the bridge must run on
+   an Android phone in the same Wi-Fi.
    The unsigned build carries no entitlements, so `Runner.entitlements` has
    no effect here. It only matters for a later App Store or TestFlight build
    with an approved entitlement.
