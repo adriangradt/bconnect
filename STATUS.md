@@ -6,9 +6,11 @@
 |-----|-------|
 | https://stalincraft.de/bedrockbridge/ | Download page, 200 |
 | https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.apk | Release APK 1.0.1 (code 2, new icon), 50.0 MB, 200 |
-| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa | 404 – no IPA built (see blockers) |
-| https://stalincraft.de/bedrockbridge/altstore.json | AltStore Classic source, 200 (no app until an IPA exists) |
+| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa | Unsigned IPA 1.0.1 (build 2) for AltStore Classic, 6.7 MB, 200 |
+| https://stalincraft.de/bedrockbridge/altstore.json | AltStore Classic source with BedrockBridge 1.0.1, 200 |
 | https://stalincraft.de/bedrockbridge/downloads/SHA256SUMS.txt | Checksums, 200 |
+
+IPA SHA-256: `578b7ea49382782da2b9b7b19ef7f86d89041277a35e1e316f8a97daeaea0a7a`
 
 APK SHA-256: `e03143190b1a59ecc01704c548b9b65de45a275ca312ed9fcae14056f12bfa83`
 
@@ -18,7 +20,13 @@ still answer.
 ## Verified
 
 - `flutter analyze`: no issues.
-- `flutter test`: 32 passed, 2 live tests skipped by default.
+- `flutter test`: 34 passed, 2 live tests skipped by default.
+- iOS: Codemagic build 6ad0bdbdd0160b2eb0746a35 (Mac mini M2, commit c93ce56)
+  passed tests and compiled the app including the Swift code. IPA checked:
+  bundle ID, arm64 executable, Flutter and App frameworks, min iOS 15.0,
+  no provisioning profile, no entitlements (frameworks carry the usual
+  ad-hoc signature), local network usage text present. Online file matches
+  the downloaded artifact byte for byte.
 - Live test against the real stalincraft.de Geyser server (local and via the
   public domain): ping works; LAN discovery through the bridge shows the real
   MOTD with the relay port; RakNet Open Connection Request 1 → Reply 1
@@ -36,16 +44,12 @@ still answer.
   APK on a phone, start the bridge for stalincraft.de, then join from a
   console or second device via the LAN tab.
 - The download page was checked over HTTP only, not visually in a browser.
-- Swift code in `ios/` was not compiled (needs Xcode).
+- IPA not yet installed on an iPhone via AltStore Classic.
 
-## Blockers
+## Blockers and limits
 
-1. **iOS IPA: waiting for Codemagic setup.** Code is on
-   github.com/adriangradt/bconnect; `codemagic.yaml` and
-   `deploy/codemagic-ios.py` are ready. Needed once from you: Codemagic
-   account with GitHub, app `adriangradt/bconnect` added, API token on the
-   server (BUILD.md, "One-time setup in Codemagic"). The Swift code and the iOS
-   build itself are unverified until the first Codemagic run.
+1. **Device tests pending.** APK and IPA are built and checked, but not yet
+   run on a phone. Install, then test server status, LAN scan and bridge.
 2. **iOS LAN limits with AltStore.** Free Apple IDs cannot get the multicast
    entitlement. LAN scan on iOS uses unicast pings across the /24 instead;
    a bridge on an iPhone cannot be found by consoles. Server status works.

@@ -42,7 +42,7 @@ def token() -> str:
     return f.read_text().strip()
 
 
-def api(method: str, path: str, body: dict | None = None) -> dict:
+def api(method: str, path: str, body: dict | None = None, allow_404: bool = False) -> dict | None:
     req = urllib.request.Request(
         API + path,
         method=method,
@@ -53,6 +53,8 @@ def api(method: str, path: str, body: dict | None = None) -> dict:
         with urllib.request.urlopen(req, timeout=60) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
+        if allow_404 and e.code == 404:
+            return None
         fail(f"{method} {path}: HTTP {e.code} {e.read().decode(errors='replace')[:400]}")
 
 
@@ -110,8 +112,14 @@ def main() -> None:
         print(f"started build {build_id} for commit {commit}")
 
     last = None
+    deadline_404 = time.time() + 300
     while True:
-        build = api("GET", f"/builds/{build_id}")["build"]
+        # A freshly started build can take a moment to appear in the API.
+        res = api("GET", f"/builds/{build_id}", allow_404=time.time() < deadline_404)
+        if res is None:
+            time.sleep(15)
+            continue
+        build = res["build"]
         status = build.get("status")
         if status != last:
             print(f"{time.strftime('%H:%M:%S')} {status}", flush=True)
