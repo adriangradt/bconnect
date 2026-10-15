@@ -5,14 +5,14 @@
 | URL | State |
 |-----|-------|
 | https://stalincraft.de/bedrockbridge/ | Download page, 200 |
-| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.apk | Release APK 1.0.1 (code 2, new icon), 50.0 MB, 200 |
-| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa | Unsigned IPA 1.0.1 (build 2) for AltStore Classic, 6.7 MB, 200 |
-| https://stalincraft.de/bedrockbridge/altstore.json | AltStore Classic source with BedrockBridge 1.0.1, 200 |
+| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.apk | Release APK 1.1.0 (code 3, transfer mode), 50.5 MB, 200 |
+| https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa | Unsigned IPA 1.1.0 (build 3) for AltStore Classic, 6.7 MB, 200 |
+| https://stalincraft.de/bedrockbridge/altstore.json | AltStore Classic source with BedrockBridge 1.1.0, 200 |
 | https://stalincraft.de/bedrockbridge/downloads/SHA256SUMS.txt | Checksums, 200 |
 
-IPA SHA-256: `578b7ea49382782da2b9b7b19ef7f86d89041277a35e1e316f8a97daeaea0a7a`
+IPA SHA-256: `b7efa33eef6ab59c003890ba7ab276ae18de6d352149408cf71dfb13b3b03b0b`
 
-APK SHA-256: `e03143190b1a59ecc01704c548b9b65de45a275ca312ed9fcae14056f12bfa83`
+APK SHA-256: `1e9997928682eec0f14bed8dfed8c254c22d0ab1fd759ee81af7a526e0883614`
 
 The existing site (`/`, `/spieler`, …) and all other vhosts are unchanged and
 still answer.
