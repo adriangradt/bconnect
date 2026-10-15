@@ -1,0 +1,30 @@
+# Codemagic: unsigned iOS build for AltStore Classic.
+# Started by deploy/codemagic-ios.sh on the homelab; no GitHub involved.
+# AltStore re-signs the IPA with the user's Apple ID, so no signing here.
+workflows:
+  ios-altstore:
+    name: iOS IPA for AltStore Classic
+    instance_type: mac_mini_m2
+    max_build_duration: 40
+    environment:
+      flutter: 3.47.7
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Tool versions
+        script: |
+          flutter --version
+          xcodebuild -version
+      - name: Test and build unsigned IPA
+        script: deploy/build-ios-altstore.sh
+      - name: Inspect IPA
+        script: |
+          set -e
+          cd build/ipa-altstore/Payload/Runner.app
+          plutil -p Info.plist | grep -E 'CFBundleIdentifier|CFBundleShortVersionString|CFBundleVersion|MinimumOSVersion|NSLocalNetworkUsageDescription'
+          lipo -info Runner
+          # An unsigned build must not carry entitlements or a provisioning profile.
+          test ! -e embedded.mobileprovision
+          ls Frameworks
+    artifacts:
+      - build/BedrockBridge.ipa

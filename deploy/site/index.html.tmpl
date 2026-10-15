@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BedrockBridge – stalincraft.de</title>
+<meta name="description" content="BedrockBridge bringt Minecraft-Bedrock-Server in den LAN-Tab von Xbox, PlayStation, Switch und Handy. Download für Android und iOS.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;600&family=Silkscreen:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=5">
+<link rel="stylesheet" href="/bedrockbridge/bedrockbridge.css?v=$css_version">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="kopf">
+  <a class="logo" href="/" aria-label="stalincraft.de Startseite">
+    <span class="logo-text">stalincraft</span><span class="logo-tld">.de</span>
+    <span class="splash" aria-hidden="true">Jetzt im LAN-Tab!</span>
+  </a>
+  <nav class="menue" aria-label="Hauptmenü">
+    <a class="mc-knopf" href="/">Bestenliste</a>
+    <a class="mc-knopf" href="/spieler">Spieler</a>
+    <a class="mc-knopf" href="/live">Live-Log</a>
+    <a class="mc-knopf" href="/gebannt">Gebannt</a>
+    <a class="mc-knopf" href="/regeln">Regeln</a>
+    <a class="mc-knopf aktiv" href="/bedrockbridge/" aria-current="page">App</a>
+  </nav>
+</header>
+
+<div class="bb-buehne">
+  <main class="gui" id="inhalt">
+    <h1 class="gui-titel">BedrockBridge</h1>
+    <p class="gui-info">Konsolen zeigen nur Server aus dem eigenen Netzwerk an. BedrockBridge läuft auf deinem Handy
+      und lässt einen Bedrock-Server wie <strong>stalincraft.de</strong> im LAN-Tab von Xbox, PlayStation, Switch,
+      Tablet oder einem zweiten Handy erscheinen. Keine Freundesliste, kein DNS-Umbau.</p>
+
+    <div class="bb-downloads">
+      <section class="bb-karte" aria-labelledby="dl-android">
+        <h2 class="bb-karte-titel" id="dl-android">Android</h2>
+        $android_block
+      </section>
+
+      <section class="bb-karte" aria-labelledby="dl-ios">
+        <h2 class="bb-karte-titel" id="dl-ios">iPhone und iPad</h2>
+        $ios_block
+      </section>
+    </div>
+
+    <h2 class="gui-unter">So funktioniert es</h2>
+    <ol class="bb-schritte">
+      <li><strong>App öffnen.</strong> stalincraft.de ist schon eingetragen. Weitere Server fügst du mit „+ Server“ hinzu.</li>
+      <li><strong>„Ins LAN bringen“ tippen.</strong> Das Handy meldet den Server jetzt im WLAN an.</li>
+      <li><strong>Minecraft auf der Konsole öffnen:</strong> Spielen → Freunde → LAN-Spiele. Server antippen, fertig.</li>
+      <li><strong>App im Hintergrund lassen.</strong> Solange die Bridge läuft, zeigt Android eine Benachrichtigung.</li>
+    </ol>
+
+    <h2 class="gui-unter">Was die App kann</h2>
+    <ul class="bb-liste">
+      <li>Server-Status: Spieler, Version und Ping jedes gespeicherten Bedrock-Servers.</li>
+      <li>LAN-Suche: findet Welten und Server im WLAN, genau wie der LAN-Tab im Spiel.</li>
+      <li>Bridge: leitet den RakNet-Verkehr jedes Spielers über eine eigene Verbindung an den Server weiter.
+        Mehrere Konsolen gleichzeitig sind möglich.</li>
+    </ul>
+
+    <h2 class="gui-unter">Android: Installation</h2>
+    <ol class="bb-schritte">
+      <li>APK oben herunterladen und öffnen.</li>
+      <li>Android fragt einmalig, ob dein Browser Apps installieren darf. Erlauben, dann „Installieren“.</li>
+      <li>Beim ersten Start der Bridge die Benachrichtigung erlauben, damit Android die Bridge nicht beendet.</li>
+    </ol>
+    <p class="gui-fussnote">Prüfsumme kontrollieren (optional): <code>sha256sum BedrockBridge.apk</code> muss den oben
+      angezeigten SHA-256-Wert ergeben. Signatur-Zertifikat: <code>CN=BedrockBridge, O=stalincraft.de</code>,
+      SHA-256 <code class="bb-hash">$cert_sha256</code>.</p>
+
+    <h2 class="gui-unter">Gut zu wissen</h2>
+    <ul class="bb-liste">
+      <li>Handy und Konsole müssen im selben WLAN sein. Gast-WLANs trennen Geräte oft voneinander.</li>
+      <li>Der Verkehr läuft über dein Handy. Für flüssiges Spielen brauchst du stabiles WLAN und Internet.</li>
+      <li>Die App sammelt keine Daten und spricht nur mit den Servern, die du einträgst.</li>
+    </ul>
+    <p class="gui-fussnote">Stand: $build_date</p>
+  </main>
+</div>
+
+<footer class="fuss">
+  <p>stalincraft.de ist kein offizielles Minecraft-Produkt und steht in keiner Verbindung zu Mojang oder Microsoft.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,89 @@
+/* BedrockBridge-Downloadseite. Baut auf /static/style.css von stalincraft.de auf. */
+
+.bb-buehne {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.bb-downloads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin: 8px 0 10px;
+}
+
+.bb-karte {
+  background: var(--slot);
+  box-shadow: inset 3px 3px 0 var(--slot-dunkel), inset -3px -3px 0 var(--slot-hell);
+  padding: 20px 22px 22px;
+  color: #fff;
+  text-shadow: var(--leise-schatten);
+  min-width: 0;
+}
+
+.bb-karte-titel {
+  font-family: var(--pixel);
+  font-weight: 600;
+  font-size: 24px;
+  margin: 0 0 10px;
+}
+
+.bb-karte .mc-knopf {
+  width: 100%;
+  margin: 4px 0 14px;
+}
+
+.bb-knopf-download {
+  background: #3c8527;
+}
+
+.bb-knopf-download:hover {
+  background: #4fa233;
+  box-shadow: inset 2px 2px 0 #7fd860, inset -2px -4px 0 #2a5e1b;
+}
+
+.bb-status {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 3px 7px 2px;
+  border: 1px solid #000;
+  text-shadow: none;
+  margin-bottom: 10px;
+}
+
+.bb-status-ok { background: var(--gruen); color: #10300a; }
+.bb-status-warte { background: var(--gold); color: #3a2400; }
+
+.bb-daten {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 12px;
+  font-size: 15px;
+}
+
+.bb-daten dt { color: #ddd; }
+.bb-daten dd { margin: 0; overflow-wrap: anywhere; }
+
+.bb-karte p { margin: 0 0 10px; font-size: 16px; }
+
+.bb-hash {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.bb-schritte, .bb-liste {
+  margin: 0;
+  padding-left: 1.4em;
+  max-width: 66ch;
+}
+
+.bb-schritte li, .bb-liste li { margin: 0 0 8px; }
+
+@media (max-width: 560px) {
+  .gui { padding: 20px 18px 24px; }
+  .gui-titel { font-size: 28px; }
+}
