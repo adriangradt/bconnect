@@ -138,6 +138,9 @@ signed. It then publishes, without touching the APK:
 
 - `https://stalincraft.de/bedrockbridge/downloads/BedrockBridge.ipa`
 - `https://stalincraft.de/bedrockbridge/altstore.json`, the AltStore source
+- `https://stalincraft.de/bedrockbridge/sidestore.json`, the same source for
+  SideStore, without `buildVersion` (SideStore treats sources with build or
+  marketplace fields as notarized and refuses them)
 - the iOS card on the page with an `altstore-classic://source?url=…` button
 
 `deploy/build-ios-altstore.sh` also works on any Mac, if one is available.
