@@ -40,14 +40,15 @@ still answer.
 
 ## Blockers
 
-1. **iOS IPA: no macOS build environment.** Xcode only runs on macOS and is
-   needed to compile the app, even unsigned. Everything else for AltStore
-   Classic is ready (`deploy/build-ios-altstore.sh`, AltStore source,
-   page). Needed: a Mac (own, borrowed, or rented with SSH access).
-2. **iOS LAN discovery with AltStore.** Free Apple IDs cannot get the
-   multicast entitlement, so LAN scan and LAN discovery of the bridge do not
-   work on iOS. Server status works. Only fixable with a paid developer
-   account and Apple's approval (TestFlight/App Store route).
-3. **Original master prompt missing.** This session did not have the
-   earlier master prompt. Features were derived from the change request.
-   Send the master prompt to check for missing features.
+1. **iOS IPA: waiting for Codemagic setup.** Everything on the homelab is
+   ready: private Git endpoint `https://stalincraft.de/git/bedrockbridge.git`
+   (clone tested from the internet, push refused), `codemagic.yaml`,
+   `deploy/codemagic-ios.py`. Needed once from you: Codemagic account, app
+   added with the Git URL and credentials, API token on the server
+   (BUILD.md, "One-time setup in Codemagic"). The Swift code and the iOS
+   build itself are unverified until the first Codemagic run.
+2. **iOS LAN limits with AltStore.** Free Apple IDs cannot get the multicast
+   entitlement. LAN scan on iOS uses unicast pings across the /24 instead;
+   a bridge on an iPhone cannot be found by consoles. Server status works.
+3. **Original master prompt missing.** Features were derived from the
+   change request. Send the master prompt to check for missing features.
