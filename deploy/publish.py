@@ -116,7 +116,6 @@ def verify_ipa(ipa: Path) -> dict:
 
 SITE_URL = "https://stalincraft.de/bedrockbridge/"
 SOURCE_URL = SITE_URL + "altstore.json"
-SIDESTORE_URL = SITE_URL + "sidestore.json"
 
 
 def altstore_source(ipa_meta: dict | None, ipa: Path) -> dict:
@@ -166,18 +165,6 @@ def altstore_source(ipa_meta: dict | None, ipa: Path) -> dict:
 ANDROID_VERSIONS = {24: "7.0", 26: "8.0", 28: "9", 29: "10", 30: "11", 31: "12", 33: "13", 34: "14", 35: "15"}
 
 
-def sidestore_source(ipa_meta: dict | None, ipa: Path) -> dict:
-    """Same source for SideStore. SideStore treats sources with build or
-    marketplace fields as notarized and refuses them, so those are dropped."""
-    src = altstore_source(ipa_meta, ipa)
-    src["identifier"] = "de.stalincraft.sidestore"
-    for app in src["apps"]:
-        app.pop("marketplaceID", None)
-        for v in app["versions"]:
-            v.pop("buildVersion", None)
-    return src
-
-
 def mb(path: Path) -> str:
     return f"{path.stat().st_size / 1024 / 1024:.1f} MB".replace(".", ",")
 
@@ -199,16 +186,14 @@ def build_page(apk_meta: dict | None, ipa_meta: dict | None, out_dir: Path) -> N
         android = """<span class="bb-status bb-status-warte">In Arbeit</span>
         <p>Die Android-Version wird gerade gebaut.</p>"""
     if ipa_meta and ipa.exists():
-        ios = f"""<span class="bb-status bb-status-ok">Verfügbar über SideStore und AltStore</span>
-        <a class="mc-knopf bb-knopf-download" href="sidestore://source?url={SIDESTORE_URL}">In SideStore öffnen</a>
-        <p>SideStore erneuert die App alle 7 Tage auf dem iPhone selbst, ohne Computer.
-        Klappt der Knopf nicht: SideStore → Sources → + und diese Adresse einfügen:</p>
-        <p><code class="bb-hash">{SIDESTORE_URL}</code></p>
-        <a class="mc-knopf" href="altstore-classic://source?url={SOURCE_URL}">In AltStore Classic öffnen</a>
+        ios = f"""<span class="bb-status bb-status-ok">Verfügbar über AltStore</span>
+        <a class="mc-knopf bb-knopf-download" href="altstore-classic://source?url={SOURCE_URL}">In AltStore Classic öffnen</a>
+        <p>Klappt der Knopf nicht: AltStore → Durchsuchen → Quellen → + und diese Adresse einfügen:</p>
+        <p><code class="bb-hash">{SOURCE_URL}</code></p>
         <dl class="bb-daten">
           <dt>Version</dt><dd>{e(ipa_meta['version'])}</dd>
           <dt>Größe</dt><dd>{mb(ipa)}</dd>
-          <dt>Benötigt</dt><dd>iOS {e(str(ipa_meta['min_ios']))} oder neuer, SideStore oder AltStore Classic</dd>
+          <dt>Benötigt</dt><dd>iOS {e(str(ipa_meta['min_ios']))} oder neuer, AltStore Classic</dd>
           <dt>IPA</dt><dd><a href="downloads/BedrockBridge.ipa">BedrockBridge.ipa</a></dd>
           <dt>SHA-256</dt><dd><code class="bb-hash">{sha256(ipa)}</code></dd>
         </dl>"""
@@ -230,9 +215,6 @@ def build_page(apk_meta: dict | None, ipa_meta: dict | None, out_dir: Path) -> N
     shutil.copy(SITE / "icon.png", out_dir / "icon.png")
     (out_dir / "altstore.json").write_text(
         json.dumps(altstore_source(ipa_meta, ipa), ensure_ascii=False, indent=2) + "\n"
-    )
-    (out_dir / "sidestore.json").write_text(
-        json.dumps(sidestore_source(ipa_meta, ipa), ensure_ascii=False, indent=2) + "\n"
     )
     sums = [f"{sha256(p)}  {p.name}" for p in (apk, ipa) if p.exists()]
     (out_dir / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n" if sums else "")
@@ -273,7 +255,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp)
         build_page(apk_meta, ipa_meta, t)
-        sudo("install", "-m", "644", *(str(t / f) for f in ("index.html", "bedrockbridge.css", "icon.png", "altstore.json", "sidestore.json")),
+        sudo("install", "-m", "644", *(str(t / f) for f in ("index.html", "bedrockbridge.css", "icon.png", "altstore.json")),
              str(TARGET))
         sudo("install", "-m", "644", str(t / "SHA256SUMS.txt"), str(DOWNLOADS))
 
