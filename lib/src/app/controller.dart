@@ -73,8 +73,21 @@ class AppController extends ChangeNotifier {
 
   String _newId() => '${DateTime.now().microsecondsSinceEpoch}-${Random().nextInt(1 << 20)}';
 
-  Future<void> addServer({required String name, required String host, required int port, String lanName = ''}) async {
-    final s = SavedServer(id: _newId(), name: name.trim().isEmpty ? host.trim() : name.trim(), host: host.trim(), port: port, lanName: lanName.trim());
+  Future<void> addServer({
+    required String name,
+    required String host,
+    required int port,
+    String lanName = '',
+    bool relay = false,
+  }) async {
+    final s = SavedServer(
+      id: _newId(),
+      name: name.trim().isEmpty ? host.trim() : name.trim(),
+      host: host.trim(),
+      port: port,
+      lanName: lanName.trim(),
+      relay: relay,
+    );
     servers = [...servers, s];
     await _save();
     notifyListeners();
@@ -166,6 +179,7 @@ class AppController extends ChangeNotifier {
       remoteHost: s.host,
       remotePort: s.port,
       displayName: s.lanName.isEmpty ? null : s.lanName,
+      mode: s.relay ? BridgeMode.relay : BridgeMode.transfer,
     ));
     _logSub = b.log.listen((e) {
       bridgeLog.insert(0, e);
@@ -179,7 +193,9 @@ class AppController extends ChangeNotifier {
       await b.start();
       await NativeNetwork.startBridgeService(
         title: 'BedrockBridge aktiv',
-        text: '${s.name} erscheint jetzt im LAN-Tab von Minecraft',
+        text: s.relay
+            ? '${s.name} läuft über dieses Handy – App bitte offen lassen'
+            : '${s.name} im LAN-Tab – nach dem Beitreten kannst du die App schließen',
       );
       unawaited(_refreshLocalAddresses());
     } catch (e) {

@@ -120,9 +120,11 @@ void main() {
   group('BedrockBridge', () {
     late BedrockBridge bridge;
 
+    // These tests cover relay mode; transfer mode is in transfer_test.dart.
     Future<BedrockBridge> startBridge({String? displayName, Duration idle = const Duration(seconds: 30)}) async {
       bridge = BedrockBridge(BridgeConfig(
         remoteHost: '127.0.0.1',
+        mode: BridgeMode.relay,
         remotePort: server.port,
         proxyPort: 0,
         discoveryPort: 0,

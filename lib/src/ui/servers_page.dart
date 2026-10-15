@@ -212,6 +212,7 @@ class _ServerEditorState extends State<_ServerEditor> {
   late final _host = TextEditingController(text: widget.existing?.host ?? widget.host ?? '');
   late final _port = TextEditingController(text: '${widget.existing?.port ?? widget.port ?? 19132}');
   late final _lanName = TextEditingController(text: widget.existing?.lanName ?? '');
+  late bool _relay = widget.existing?.relay ?? false;
 
   @override
   void dispose() {
@@ -228,13 +229,14 @@ class _ServerEditorState extends State<_ServerEditor> {
     final port = int.parse(_port.text.trim());
     final e = widget.existing;
     if (e == null) {
-      await c.addServer(name: _name.text, host: _host.text, port: port, lanName: _lanName.text);
+      await c.addServer(name: _name.text, host: _host.text, port: port, lanName: _lanName.text, relay: _relay);
     } else {
       await c.updateServer(e.copyWith(
         name: _name.text.trim().isEmpty ? _host.text.trim() : _name.text.trim(),
         host: _host.text.trim(),
         port: port,
         lanName: _lanName.text.trim(),
+        relay: _relay,
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -284,7 +286,18 @@ class _ServerEditorState extends State<_ServerEditor> {
               ),
               onFieldSubmitted: (_) => _submit(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _relay,
+              onChanged: (v) => setState(() => _relay = v),
+              title: const Text('Dauerhaft über dieses Handy leiten'),
+              subtitle: const Text(
+                'Nur nötig, wenn der Server Weiterleitungen ablehnt. Dann muss die App '
+                'während des ganzen Spiels offen bleiben.',
+              ),
+            ),
+            const SizedBox(height: 12),
             FilledButton(onPressed: _submit, child: const Text('Speichern')),
           ],
         ),

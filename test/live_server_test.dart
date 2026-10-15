@@ -27,7 +27,9 @@ void main() {
 
   test('RakNet handshake reaches the real server through the bridge', () async {
     final remote = await BedrockPinger.ping(host!, port);
-    final bridge = BedrockBridge(BridgeConfig(remoteHost: host, remotePort: port, proxyPort: 0, discoveryPort: 0));
+    final bridge = BedrockBridge(
+      BridgeConfig(remoteHost: host, remotePort: port, proxyPort: 0, discoveryPort: 0, mode: BridgeMode.relay),
+    );
     addTearDown(bridge.dispose);
     await bridge.start();
 

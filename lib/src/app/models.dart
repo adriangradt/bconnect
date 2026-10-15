@@ -10,6 +10,7 @@ class SavedServer {
     required this.host,
     this.port = bedrockDefaultPort,
     this.lanName = '',
+    this.relay = false,
   });
 
   final String id;
@@ -20,17 +21,23 @@ class SavedServer {
   /// Name shown in the console's LAN list. Empty keeps the server's MOTD.
   final String lanName;
 
+  /// Relay all traffic through the phone instead of transferring the
+  /// console to the server after login. Only for servers that block transfers.
+  final bool relay;
+
   String get endpoint => '$host:$port';
 
-  SavedServer copyWith({String? name, String? host, int? port, String? lanName}) => SavedServer(
+  SavedServer copyWith({String? name, String? host, int? port, String? lanName, bool? relay}) => SavedServer(
         id: id,
         name: name ?? this.name,
         host: host ?? this.host,
         port: port ?? this.port,
         lanName: lanName ?? this.lanName,
+        relay: relay ?? this.relay,
       );
 
-  Map<String, Object?> toJson() => {'id': id, 'name': name, 'host': host, 'port': port, 'lanName': lanName};
+  Map<String, Object?> toJson() =>
+      {'id': id, 'name': name, 'host': host, 'port': port, 'lanName': lanName, 'relay': relay};
 
   factory SavedServer.fromJson(Map<String, Object?> j) => SavedServer(
         id: j['id'] as String,
@@ -38,6 +45,7 @@ class SavedServer {
         host: j['host'] as String,
         port: (j['port'] as num?)?.toInt() ?? bedrockDefaultPort,
         lanName: j['lanName'] as String? ?? '',
+        relay: j['relay'] as bool? ?? false,
       );
 
   static String encodeList(List<SavedServer> list) => jsonEncode([for (final s in list) s.toJson()]);

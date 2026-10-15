@@ -22,7 +22,21 @@ Load it into a shell with:
     BEDROCK_LIVE_HOST=stalincraft.de flutter test test/live_server_test.dart
 
 The live test pings the real server and runs a RakNet Open Connection
-Request 1 / Reply 1 handshake through a running bridge.
+Request 1 / Reply 1 handshake through a running bridge (relay mode).
+
+`test/transfer_test.dart` also joins the bridge with an independent client,
+PrismarineJS bedrock-protocol, for Bedrock 1.26.51, 1.21.0, 1.20.50 and
+1.19.20, and checks that each client gets "login success" and a Transfer
+packet. Those tests are skipped unless the client is installed once:
+
+    mkdir -p ~/bedrockbridge-testclient && cd ~/bedrockbridge-testclient
+    npm init -y && mkdir -p stub-xbox
+    # bedrock-protocol pulls prismarine-xbox-services from Git, which this npm
+    # setup refuses; it is only used for Xbox Live, so a stub replaces it.
+    echo '{"name":"prismarine-xbox-services","version":"0.0.0-stub","main":"index.js"}' > stub-xbox/package.json
+    echo 'module.exports = {}' > stub-xbox/index.js
+    npm pkg set dependencies.bedrock-protocol=3.60.1 'overrides.prismarine-xbox-services=file:./stub-xbox'
+    npm install --ignore-scripts
 
 ## Android release
 

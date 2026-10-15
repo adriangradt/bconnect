@@ -14,7 +14,7 @@ void main() {
   group('SavedServer', () {
     test('JSON round trip', () {
       final list = [
-        SavedServer(id: 'a', name: 'Eins', host: 'example.net', port: 19133, lanName: 'Bei uns'),
+        SavedServer(id: 'a', name: 'Eins', host: 'example.net', port: 19133, lanName: 'Bei uns', relay: true),
         SavedServer(id: 'b', name: 'Zwei', host: '2001:db8::1'),
       ];
       final back = SavedServer.decodeList(SavedServer.encodeList(list));

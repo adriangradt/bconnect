@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../raknet/binary.dart';
+import '../raknet/connection.dart';
 import '../raknet/motd.dart';
 import '../raknet/packets.dart';
 import '../raknet/ping.dart';
+import 'transfer.dart';
 
 class BridgeException implements Exception {
   BridgeException(this.message);
@@ -13,9 +16,21 @@ class BridgeException implements Exception {
   String toString() => message;
 }
 
+/// How the bridge gets a console onto the remote server.
+enum BridgeMode {
+  /// The console logs in to the bridge and is transferred to the remote
+  /// server. After that the phone is not needed; the app can be closed.
+  transfer,
+
+  /// Every packet is relayed through the phone for the whole session.
+  /// Needed only for servers that refuse transferred players.
+  relay,
+}
+
 class BridgeConfig {
   const BridgeConfig({
     required this.remoteHost,
+    this.mode = BridgeMode.transfer,
     this.remotePort = bedrockDefaultPort,
     this.proxyPort = bedrockDefaultPort,
     this.discoveryPort = bedrockDefaultPort,
@@ -28,6 +43,7 @@ class BridgeConfig {
 
   final String remoteHost;
   final int remotePort;
+  final BridgeMode mode;
 
   /// Port that carries the game traffic. 0 picks a free port.
   final int proxyPort;
@@ -66,6 +82,9 @@ class BridgeStats {
   int packetsToRemote = 0;
   int packetsToClients = 0;
   int pingsAnswered = 0;
+
+  /// Consoles handed over to the remote server (transfer mode).
+  int transfers = 0;
   Duration? remoteLatency;
   BedrockMotd? remoteMotd;
   DateTime? lastRemotePong;
@@ -108,6 +127,8 @@ class BedrockBridge {
   RawDatagramSocket? _discovery;
   final List<StreamSubscription<RawSocketEvent>> _subs = [];
   final Map<String, Future<_Session>> _sessions = {};
+  final Map<String, RakNetConnection> _rak = {};
+  Timer? _rakTimer;
   Timer? _pongTimer;
   Timer? _reaper;
   InternetAddress? _remoteAddress;
@@ -172,6 +193,7 @@ class BedrockBridge {
     _running = true;
     _pongTimer = Timer.periodic(config.pongRefreshInterval, (_) => _refreshPong());
     _reaper = Timer.periodic(const Duration(seconds: 5), (_) => _reapIdleSessions());
+    _rakTimer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tickRakNet());
     _changed();
   }
 
@@ -192,6 +214,11 @@ class BedrockBridge {
     _running = false;
     _pongTimer?.cancel();
     _reaper?.cancel();
+    _rakTimer?.cancel();
+    for (final c in _rak.values.toList()) {
+      c.disconnect();
+    }
+    _rak.clear();
     for (final s in _subs) {
       await s.cancel();
     }
@@ -290,7 +317,100 @@ class BedrockBridge {
     while ((dg = socket.receive()) != null) {
       final d = dg!;
       if (_answerPing(socket, d)) continue;
-      _forwardToRemote(d);
+      if (config.mode == BridgeMode.transfer) {
+        _handleTransferDatagram(socket, d);
+      } else {
+        _forwardToRemote(d);
+      }
+    }
+  }
+
+  void _handleTransferDatagram(RawDatagramSocket socket, Datagram dg) {
+    final data = dg.data;
+    if (data.isEmpty) return;
+    final key = '${dg.address.address}:${dg.port}';
+    try {
+      switch (data[0]) {
+        case RakNetId.openConnectionRequest1:
+          socket.send(RakNetHandshake.reply1(data, guid), dg.address, dg.port);
+          return;
+        case RakNetId.openConnectionRequest2:
+          final req = RakNetHandshake.parseRequest2(data);
+          final existing = _rak[key];
+          final conn = (existing != null && !existing.closed) ? existing : _openRakNet(socket, dg, req.mtu);
+          socket.send(
+            RakNetHandshake.reply2(serverGuid: guid, client: dg.address, clientPort: dg.port, mtu: conn.mtu),
+            dg.address,
+            dg.port,
+          );
+          return;
+      }
+      _rak[key]?.handleDatagram(data);
+    } on PacketFormatException catch (e) {
+      _emit(BridgeLogLevel.warning, 'Bad packet from $key: ${e.message}');
+    }
+  }
+
+  RakNetConnection _openRakNet(RawDatagramSocket socket, Datagram dg, int mtu) {
+    final key = '${dg.address.address}:${dg.port}';
+    late final RakNetConnection conn;
+    final session = BedrockTransferSession(
+      targetHost: config.remoteHost,
+      targetPort: config.remotePort,
+      sendBatch: (b) => conn.sendGame(b),
+      onLog: (m) => _emit(BridgeLogLevel.warning, m),
+      onTransferred: (protocol) {
+        stats.transfers++;
+        _emit(
+          BridgeLogLevel.info,
+          'Client $key sent to ${config.remoteHost}:${config.remotePort} (protocol $protocol). '
+          'The app is no longer needed for this player.',
+        );
+        _changed();
+        // Keep the session briefly so the transfer packet gets acknowledged.
+        Timer(const Duration(seconds: 5), () {
+          if (identical(_rak[key], conn)) conn.disconnect();
+        });
+      },
+    );
+    conn = RakNetConnection(
+      address: dg.address,
+      port: dg.port,
+      mtu: mtu,
+      serverGuid: guid,
+      serverAddress: InternetAddress.anyIPv4,
+      serverPort: socket.port,
+      send: (b) {
+        if (socket.send(b, dg.address, dg.port) > 0) {
+          stats.bytesToClients += b.length;
+          stats.packetsToClients++;
+        }
+      },
+      onGamePacket: session.handleBatch,
+      onClosed: (reason) {
+        if (identical(_rak[key], conn)) _rak.remove(key);
+        stats.activeSessions = (stats.activeSessions - 1).clamp(0, 1 << 30);
+        _emit(BridgeLogLevel.info, 'Client $key left the bridge ($reason)');
+        _changed();
+      },
+    );
+    _rak[key]?.disconnect();
+    _rak[key] = conn;
+    stats.activeSessions++;
+    stats.totalSessions++;
+    _emit(BridgeLogLevel.info, 'Client $key is connecting');
+    _changed();
+    return conn;
+  }
+
+  void _tickRakNet() {
+    final now = DateTime.now();
+    for (final c in _rak.values.toList()) {
+      if (now.difference(c.lastActive) > config.sessionIdleTimeout) {
+        c.disconnect();
+      } else {
+        c.tick();
+      }
     }
   }
 

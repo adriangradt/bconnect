@@ -13,24 +13,31 @@ Download page: https://stalincraft.de/bedrockbridge/
   limited and directed broadcast addresses and lists every pong, like the
   in-game LAN tab.
 - **Bridge**: answers LAN discovery pings with the remote server's MOTD
-  (own GUID, relay port in the port fields) and relays every other datagram
-  between each client and the remote server. Each client gets its own
-  upstream UDP socket, so the RakNet handshake stays end to end and several
-  players can join at once. Idle sessions close after 30 s.
+  (own GUID, bridge port in the port fields). Two modes:
+  - *Transfer* (default, like BedrockTogether): the bridge runs a minimal
+    RakNet server, lets the console log in (network settings, no
+    encryption), answers with PlayStatus "login success" and a Transfer
+    packet to the remote server. The console then connects directly; the
+    phone is only needed while joining and the app can be closed.
+  - *Relay*: every datagram is relayed through the phone, with one upstream
+    socket per client. Only for servers that refuse transferred players.
 
 ## Layout
 
 | Path | Content |
 |------|---------|
 | `lib/src/raknet/` | Packet codecs, MOTD parser, pinger, LAN scanner (pure Dart, `dart:io`) |
-| `lib/src/bridge/bridge.dart` | UDP relay with discovery responder |
+| `lib/src/raknet/connection.dart` | RakNet server side: frames, ACK/NAK, splits, ordering, connection handshake |
+| `lib/src/bridge/transfer.dart` | Bedrock login hand-off: network settings, PlayStatus, Transfer |
+| `lib/src/bridge/bridge.dart` | Discovery responder, transfer and relay modes |
 | `lib/src/platform/native_network.dart` | Method channel to native code |
 | `lib/src/app/` | State (`AppController`) and persisted server list |
 | `lib/src/ui/` | Material 3 UI: Server, LAN, Bridge tabs (German) |
 | `android/app/src/main/kotlin/…/MainActivity.kt` | Multicast lock, broadcast addresses, service start |
 | `android/app/src/main/kotlin/…/BridgeService.kt` | Foreground service with Wi-Fi lock |
 | `ios/Runner/AppDelegate.swift` | Broadcast addresses via `getifaddrs` |
-| `test/` | Codec tests, real-UDP network tests, live test, widget tests |
+| `test/` | Codec tests, real-UDP network tests, transfer + interop tests, live test, widget tests |
+| `tool/interop/` | Interop client using PrismarineJS bedrock-protocol |
 | `deploy/` | Download page template, `publish.py`, `release-android.sh` |
 
 See [BUILD.md](BUILD.md) for building, testing and publishing, and

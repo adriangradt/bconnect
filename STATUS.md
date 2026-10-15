@@ -20,7 +20,11 @@ still answer.
 ## Verified
 
 - `flutter analyze`: no issues.
-- `flutter test`: 34 passed, 2 live tests skipped by default.
+- `flutter test`: 53 passed (including 4 interop runs with bedrock-protocol), 2 live tests skipped by default.
+- Transfer mode (1.1.0): an independent Bedrock client (PrismarineJS
+  bedrock-protocol, versions 1.19.20 to 1.26.51) joins the bridge and
+  receives login success plus a Transfer packet to the configured server.
+  Not yet tried with a real console.
 - iOS: Codemagic build 6ad0bdbdd0160b2eb0746a35 (Mac mini M2, commit c93ce56)
   passed tests and compiled the app including the Swift code. IPA checked:
   bundle ID, arm64 executable, Flutter and App frameworks, min iOS 15.0,
