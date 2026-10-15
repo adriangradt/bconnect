@@ -253,7 +253,7 @@ void main() {
       expect(tr.varuint(), BedrockPacketId.transfer);
       expect(utf8.decode(tr.bytes(tr.varuint())), 'stalincraft.de');
       expect(tr.bytes(2), [0xbc, 0x4a], reason: '19132 little endian');
-      expect(tr.boolean(), isTrue, reason: 'reload_world');
+      expect(tr.boolean(), isFalse, reason: 'reload_world');
       expect(tr.boolean(), isFalse, reason: 'no gatherings info');
       expect(tr.done, isTrue);
     });
@@ -283,19 +283,47 @@ void main() {
     });
   });
 
+  group('SpawnTemplateStore', () {
+    final store = SpawnTemplateStore.fromGzip(File('assets/spawn_templates.json.gz').readAsBytesSync());
+
+    test('covers 1.19.30 up to the current release', () {
+      expect(store.protocols.first, 554);
+      expect(store.protocols, contains(2193));
+      expect(store.protocols.length, greaterThanOrEqualTo(30));
+    });
+
+    test('picks exact, older or newest templates', () {
+      expect(store.forProtocol(2193), same(store.forProtocol(2193)));
+      expect(store.forProtocol(2200), same(store.forProtocol(2193)), reason: 'newer client gets newest');
+      expect(store.forProtocol(553), isNull, reason: 'before 1.19.30 there are no templates');
+      final older = store.protocols[store.protocols.length - 2];
+      expect(store.forProtocol(older + 1), same(store.forProtocol(older)));
+    });
+
+    test('spawn sequences contain StartGame, 36 chunks and the spawn status', () {
+      final t = store.forProtocol(2193)!;
+      final ids = [for (final p in t.spawnSequence) ByteReader(p).varuint() & 0x3ff];
+      expect(ids, contains(0x0b), reason: 'StartGame');
+      expect(ids.where((i) => i == 0x3a), hasLength(36), reason: 'LevelChunk');
+      expect(ids, contains(BedrockPacketId.playStatus));
+    });
+  });
+
   group('interop with bedrock-protocol', () {
     final nodePath = '${Platform.environment['HOME']}/bedrockbridge-testclient/node_modules';
     final skip = Directory('$nodePath/bedrock-protocol').existsSync() ? null : 'bedrock-protocol not installed';
 
-    for (final version in ['1.26.51', '1.21.0', '1.20.50', '1.19.20']) {
+    for (final version in ['1.26.51', '1.21.0', '1.20.50', '1.19.30']) {
       test('client $version is transferred to the remote server', () async {
         final server = await TestBedrockServer.start();
         addTearDown(server.close);
+        final store = SpawnTemplateStore.fromGzip(File('assets/spawn_templates.json.gz').readAsBytesSync());
         final bridge = BedrockBridge(BridgeConfig(
           remoteHost: '127.0.0.1',
           remotePort: server.port,
           proxyPort: 0,
           discoveryPort: 0,
+          spawnTemplates: store.forProtocol,
         ));
         addTearDown(bridge.dispose);
         await bridge.start();
@@ -311,6 +339,7 @@ void main() {
             .toList();
         expect(r.exitCode, 0, reason: '${r.stdout}\n${r.stderr}');
         expect(lines.any((l) => l['play_status'] == 'login_success'), isTrue);
+        expect(lines.any((l) => l['play_status'] == 'player_spawn'), isTrue, reason: 'empty world before transfer');
         final transfer = lines.firstWhere((l) => l.containsKey('transfer'))['transfer'] as Map;
         expect(transfer['server_address'], '127.0.0.1');
         expect(transfer['port'], server.port);

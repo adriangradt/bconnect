@@ -38,6 +38,22 @@ packet. Those tests are skipped unless the client is installed once:
     npm pkg set dependencies.bedrock-protocol=3.60.1 'overrides.prismarine-xbox-services=file:./stub-xbox'
     npm install --ignore-scripts
 
+## Spawn templates
+
+The transfer mode needs an empty-world spawn per Minecraft version. After a
+Minecraft update (and a bedrock-protocol update that knows it), regenerate:
+
+    cd ~/bedrockbridge-testclient && npm install --ignore-scripts bedrock-protocol@latest
+    NODE_PATH=$PWD/node_modules node ~/bedrockbridge/tool/spawn/gen_templates.js \
+      ~/bedrockbridge/assets/spawn_templates.json.gz
+
+Clients newer than all templates get the newest one, which usually works.
+
+To test variants with a real client without building the app, run a bridge
+on the homelab and add `192.168.178.42:<port>` as a server in Minecraft:
+
+    dart run tool/interop/serve_bridge.dart stalincraft.de 19132 19158 afterInitialized assets/spawn_templates.json.gz
+
 ## Android release
 
     deploy/release-android.sh          # analyze, test, build, verify, publish

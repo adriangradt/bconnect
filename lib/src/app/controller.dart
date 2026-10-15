@@ -3,9 +3,11 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../bridge/bridge.dart';
+import '../bridge/transfer.dart';
 import '../platform/native_network.dart';
 import '../raknet/lan_discovery.dart';
 import '../raknet/packets.dart';
@@ -44,6 +46,8 @@ class AppController extends ChangeNotifier {
   String? bridgeError;
   final List<BridgeLogEntry> bridgeLog = [];
   List<InternetAddress> localAddresses = [];
+
+  SpawnTemplateStore? _spawnTemplates;
 
   StreamSubscription<BridgeLogEntry>? _logSub;
   StreamSubscription<void>? _changeSub;
@@ -175,11 +179,13 @@ class AppController extends ChangeNotifier {
     bridgeLog.clear();
     notifyListeners();
 
+    _spawnTemplates ??= await _loadSpawnTemplates();
     final b = BedrockBridge(BridgeConfig(
       remoteHost: s.host,
       remotePort: s.port,
       displayName: s.lanName.isEmpty ? null : s.lanName,
       mode: s.relay ? BridgeMode.relay : BridgeMode.transfer,
+      spawnTemplates: _spawnTemplates?.forProtocol,
     ));
     _logSub = b.log.listen((e) {
       bridgeLog.insert(0, e);
@@ -204,6 +210,16 @@ class AppController extends ChangeNotifier {
     } finally {
       bridgeStarting = false;
       notifyListeners();
+    }
+  }
+
+  Future<SpawnTemplateStore?> _loadSpawnTemplates() async {
+    try {
+      final data = await rootBundle.load('assets/spawn_templates.json.gz');
+      return SpawnTemplateStore.fromGzip(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+    } on Object catch (e) {
+      bridgeLog.insert(0, BridgeLogEntry(BridgeLogLevel.error, 'Spawn templates missing: $e'));
+      return null;
     }
   }
 

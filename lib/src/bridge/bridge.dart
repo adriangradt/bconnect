@@ -31,6 +31,8 @@ class BridgeConfig {
   const BridgeConfig({
     required this.remoteHost,
     this.mode = BridgeMode.transfer,
+    this.transferStage = TransferStage.afterInitialized,
+    this.spawnTemplates,
     this.remotePort = bedrockDefaultPort,
     this.proxyPort = bedrockDefaultPort,
     this.discoveryPort = bedrockDefaultPort,
@@ -44,6 +46,10 @@ class BridgeConfig {
   final String remoteHost;
   final int remotePort;
   final BridgeMode mode;
+  final TransferStage transferStage;
+
+  /// Spawn packets per protocol, for stages after login.
+  final SpawnTemplates? Function(int protocol)? spawnTemplates;
 
   /// Port that carries the game traffic. 0 picks a free port.
   final int proxyPort;
@@ -358,7 +364,9 @@ class BedrockBridge {
       targetHost: config.remoteHost,
       targetPort: config.remotePort,
       sendBatch: (b) => conn.sendGame(b),
-      onLog: (m) => _emit(BridgeLogLevel.warning, m),
+      onLog: (m) => _emit(BridgeLogLevel.info, '$key: $m'),
+      stage: config.transferStage,
+      templatesFor: config.spawnTemplates,
       onTransferred: (protocol) {
         stats.transfers++;
         _emit(

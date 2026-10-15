@@ -16,9 +16,15 @@ Download page: https://stalincraft.de/bedrockbridge/
   (own GUID, bridge port in the port fields). Two modes:
   - *Transfer* (default, like BedrockTogether): the bridge runs a minimal
     RakNet server, lets the console log in (network settings, no
-    encryption), answers with PlayStatus "login success" and a Transfer
-    packet to the remote server. The console then connects directly; the
-    phone is only needed while joining and the app can be closed.
+    encryption) and spawns it in an empty world, the way BedrockConnect
+    does. Once the client reports itself initialised, the bridge sends a
+    Transfer packet (`reload_world = false`) to the remote server. The
+    console then connects directly; the phone is only needed while joining.
+    Minecraft ignores a Transfer that arrives before the player is in a
+    world, and stays in the empty world with `reload_world = true`.
+    The spawn packets per version (1.19.30 up to 26.x) are generated with
+    PrismarineJS bedrock-protocol: `tool/spawn/gen_templates.js` writes
+    `assets/spawn_templates.json.gz`.
   - *Relay*: every datagram is relayed through the phone, with one upstream
     socket per client. Only for servers that refuse transferred players.
 
